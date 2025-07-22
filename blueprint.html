@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Habit Builder: An Interactive Blueprint</title>
+    <!-- Chosen Palette: Calm Harmony Neutrals -->
+    <!-- Application Structure Plan: The SPA uses a thematic, non-linear dashboard structure with a sticky top navigation. This allows users to freely explore the key pillars of the report (Science, App Design, AI, Market Strategy, Ethics) in any order they choose, which is more intuitive for exploration than a linear document. Key interactions include clickable diagrams for psychological models, an interactive competitor comparison, and a phased roadmap timeline, designed to make complex concepts tangible and easy to digest. -->
+    <!-- Visualization & Content Choices: Report Info: Habit formation models (Duhigg, Fogg, Clear) -> Goal: Organize/Inform -> Viz: Interactive HTML/CSS diagrams (clickable loop, sliders) -> Justification: Makes abstract theories interactive and memorable. Report Info: Competitor analysis -> Goal: Compare -> Viz: Interactive cards/polar chart -> Justification: Allows for quick, dynamic comparison. Report Info: Engagement vs. Retention data -> Goal: Inform -> Viz: Bar Chart (Chart.js) -> Justification: Clearly visualizes the core market problem. Report Info: Phased roadmap -> Goal: Change/Organize -> Viz: HTML/CSS timeline -> Justification: Shows progression over time clearly. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F5F2;
+            color: #4A4A4A;
+        }
+
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-link.active,
+        .nav-link:hover {
+            color: #4DB6AC;
+            border-bottom-color: #4DB6AC;
+        }
+
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .tag {
+            background-color: #E0F2F1;
+            color: #00796B;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .habit-loop-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .habit-loop-node:hover,
+        .habit-loop-node.active {
+            transform: scale(1.1);
+            background-color: #4DB6AC;
+            color: white;
+        }
+
+        .bmap-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4DB6AC;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .bmap-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4DB6AC;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+            border: 4px solid #4DB6AC;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: -21px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #4DB6AC;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">AI Habit Builder</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#science" class="nav-link pb-1">The Science</a>
+                <a href="#app" class="nav-link pb-1">The App</a>
+                <a href="#ai" class="nav-link pb-1">The AI Engine</a>
+                <a href="#market" class="nav-link pb-1">Market & Strategy</a>
+                <a href="#ethics" class="nav-link pb-1">Ethics & Trust</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
+                    </path>
+                </svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4 space-y-2">
+            <a href="#science" class="block nav-link">The Science</a>
+            <a href="#app" class="block nav-link">The App</a>
+            <a href="#ai" class="block nav-link">The AI Engine</a>
+            <a href="#market" class="block nav-link">Market & Strategy</a>
+            <a href="#ethics" class="block nav-link">Ethics & Trust</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- Introduction Section -->
+        <section id="intro" class="text-center mb-24">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">An Interactive Blueprint for the Future of Habit Formation
+            </h2>
+            <p class="text-lg max-w-3xl mx-auto text-gray-600 mb-8">This application translates a comprehensive research
+                report into an explorable experience. Discover the science, architecture, and strategy behind a
+                next-generation, AI-powered habit builder designed for lasting change.</p>
+            <div class="flex justify-center items-center space-x-8">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-[#4DB6AC]">66</div>
+                    <div class="text-sm text-gray-500">Avg. Days to Form a Habit</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-[#4DB6AC]">3</div>
+                    <div class="text-sm text-gray-500">Pillars of Success</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-[#4DB6AC]">4</div>
+                    <div class="text-sm text-gray-500">Laws of Behavior Change</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Science Section -->
+        <section id="science" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2">The Science of Habit</h2>
+            <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">Effective app design isn't about
+                features; it's about understanding human psychology. This section explores the foundational models that
+                explain how habits work. Interact with the diagrams to learn more.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <!-- Duhigg's Habit Loop -->
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">Duhigg's Habit Loop</h3>
+                    <p class="mb-6">Charles Duhigg popularized this simple 3-step neurological pattern. A fourth
+                        element, Craving, is what truly powers the loop. Click each node to see its role.</p>
+                    <div class="relative w-full aspect-square flex items-center justify-center">
+                        <div
+                            class="absolute w-48 h-48 md:w-64 md:h-64 border-2 border-dashed border-gray-300 rounded-full">
+                        </div>
+                        <div id="habit-loop-cue"
+                            class="habit-loop-node absolute flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-full font-semibold"
+                            style="transform: translate(0, -90px) md:translate(0, -120px);">Cue</div>
+                        <div id="habit-loop-routine"
+                            class="habit-loop-node absolute flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-full font-semibold"
+                            style="transform: translate(80px, 45px) md:translate(105px, 60px);">Routine</div>
+                        <div id="habit-loop-reward"
+                            class="habit-loop-node absolute flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-full font-semibold"
+                            style="transform: translate(-80px, 45px) md:translate(-105px, 60px);">Reward</div>
+                        <div class="text-2xl font-bold text-[#4DB6AC]">Craving</div>
+                    </div>
+                    <div id="habit-loop-info" class="mt-6 p-4 bg-teal-50 rounded-lg min-h-[100px]">
+                        <p class="text-teal-800">Click a node to learn more.</p>
+                    </div>
+                </div>
+
+                <!-- Fogg's Behavior Model -->
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">Fogg's Behavior Model (B=MAP)</h3>
+                    <p class="mb-6">For a behavior (B) to occur, Motivation (M), Ability (A), and a Prompt (P) must
+                        converge. Adjust the sliders to see how they affect the outcome.</p>
+                    <div class="relative h-64 bg-gray-50 rounded-lg p-4 flex items-end">
+                        <canvas id="bmap-line" class="absolute top-0 left-0 w-full h-full"></canvas>
+                        <div id="bmap-point"
+                            class="absolute w-4 h-4 bg-red-500 rounded-full transition-all duration-300"
+                            style="bottom: 25%; left: 25%;"></div>
+                        <span class="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-medium">Ability →</span>
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-sm font-medium">Motivation
+                            →</span>
+                    </div>
+                    <div class="mt-4">
+                        <div>
+                            <label for="motivation-slider" class="block mb-1 text-sm font-medium">Motivation</label>
+                            <input id="motivation-slider" type="range" min="0" max="100" value="25"
+                                class="bmap-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div class="mt-2">
+                            <label for="ability-slider" class="block mb-1 text-sm font-medium">Ability
+                                (Simplicity)</label>
+                            <input id="ability-slider" type="range" min="0" max="100" value="25"
+                                class="bmap-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                    <div id="bmap-result"
+                        class="mt-4 text-center font-bold text-lg p-2 rounded-lg bg-red-100 text-red-700">Action Fails
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clear's Four Laws -->
+            <div class="mt-12">
+                <h3 class="text-2xl font-bold text-center mb-4">Clear's Four Laws of Behavior Change</h3>
+                <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-8">James Clear provides a practical
+                    framework for designing good habits. The laws are simple, actionable rules for engineering success.
+                </p>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl mb-3">1️⃣</div>
+                        <h4 class="text-xl font-bold mb-2">Make it Obvious</h4>
+                        <p class="text-gray-600">Integrate new habits into your environment and existing routines using
+                            techniques like Habit Stacking.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl mb-3">2️⃣</div>
+                        <h4 class="text-xl font-bold mb-2">Make it Attractive</h4>
+                        <p class="text-gray-600">Bundle temptations and join cultures where your desired behavior is the
+                            norm to increase motivation.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl mb-3">3️⃣</div>
+                        <h4 class="text-xl font-bold mb-2">Make it Easy</h4>
+                        <p class="text-gray-600">Reduce friction. Start with the "Two-Minute Rule" to master the art of
+                            showing up first.</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <div class="text-4xl mb-3">4️⃣</div>
+                        <h4 class="text-xl font-bold mb-2">Make it Satisfying</h4>
+                        <p class="text-gray-600">The brain repeats what is immediately rewarded. Use trackers and
+                            streaks for instant gratification.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The App Section -->
+        <section id="app" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2">The Application Architecture</h2>
+            <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">This is how scientific principles
+                translate into a product. The app is designed around frictionless interactions and immediate, satisfying
+                feedback to support the user's journey.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">The Engagement-Retention Paradox</h3>
+                    <p class="mb-6">A key finding from market research is that a great user experience (UX) doesn't
+                        guarantee long-term retention. If the app doesn't deliver real results, users leave. This
+                        highlights the need for an effective, adaptive engine, not just a polished interface.</p>
+                    <div class="chart-container">
+                        <canvas id="retentionChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">Core Feature Mockup</h3>
+                    <p class="mb-6">The app's features are direct applications of behavioral science. Click the buttons
+                        below to see a conceptual mockup of each key component.</p>
+                    <div class="bg-gray-800 p-2 rounded-xl shadow-2xl">
+                        <div class="bg-white rounded-lg h-96 p-4 flex flex-col justify-between" id="mockup-screen">
+                            <!-- Mockup content will be injected here -->
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <button class="mockup-btn bg-[#4DB6AC] text-white p-2 rounded-lg"
+                            data-feature="onboarding">Onboarding</button>
+                        <button class="mockup-btn bg-gray-200 text-gray-800 p-2 rounded-lg"
+                            data-feature="tracking">Tracking</button>
+                        <button class="mockup-btn bg-gray-200 text-gray-800 p-2 rounded-lg"
+                            data-feature="progress">Progress</button>
+                        <button class="mockup-btn bg-gray-200 text-gray-800 p-2 rounded-lg"
+                            data-feature="social">Social</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The AI Engine Section -->
+        <section id="ai" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2">The AI Engine</h2>
+            <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">The strategic differentiator is a
+                dynamic, adaptive AI core. The AI acts as a personal behavioral scientist for each user, moving beyond
+                static reminders to offer predictive, personalized coaching.</p>
+
+            <div class="card p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">From Data to Dynamic Intervention</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center items-center">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-bold text-lg">1. Data Ingestion</h4>
+                        <p class="text-sm text-gray-600">User Input, Sensor Data, App Usage (with consent)</p>
+                    </div>
+                    <div class="text-2xl text-gray-400 font-mono hidden md:block">→</div>
+                    <div class="text-2xl text-gray-400 font-mono md:hidden mx-auto rotate-90">→</div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-bold text-lg">2. AI Analysis</h4>
+                        <p class="text-sm text-gray-600">Personalization, Prediction, Coaching Models</p>
+                    </div>
+                    <div class="text-2xl text-gray-400 font-mono hidden md:block">→</div>
+                    <div class="text-2xl text-gray-400 font-mono md:hidden mx-auto rotate-90">→</div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-bold text-lg">3. User Intervention</h4>
+                        <p class="text-sm text-gray-600">Adaptive Goals, Proactive Support, Smart Prompts</p>
+                    </div>
+                </div>
+                <div class="mt-8 grid md:grid-cols-3 gap-6">
+                    <div class="text-center p-4">
+                        <h4 class="font-bold text-xl mb-2">Adaptive Goals</h4>
+                        <p class="text-gray-600">The AI dynamically adjusts habit difficulty based on performance,
+                            suggesting smaller steps during struggles and "leveling up" after success.</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <h4 class="font-bold text-xl mb-2">Predictive Support</h4>
+                        <p class="text-gray-600">A relapse prediction model identifies when a user is likely to fail and
+                            triggers a proactive, supportive intervention *before* it happens.</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <h4 class="font-bold text-xl mb-2">Conversational Coach</h4>
+                        <p class="text-gray-600">An empathetic LLM-powered coach uses Socratic dialogue and CBT
+                            techniques to help users overcome mental and emotional barriers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market & Strategy Section -->
+        <section id="market" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2">Market & Strategy</h2>
+            <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">Success requires understanding the
+                competitive landscape and following a deliberate, phased rollout. The strategy builds a durable
+                competitive moat over time.</p>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">Competitive Landscape</h3>
+                    <p class="mb-6">The market has mature players, each with a different philosophy. The key strategic
+                        gap is the lack of a truly *dynamic* and *adaptive* system. Click a competitor to learn more.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="competitorChart"></canvas>
+                    </div>
+                    <div id="competitor-info" class="mt-4 p-4 bg-gray-100 rounded-lg min-h-[80px]">
+                        <p class="text-gray-700">Hover over a segment in the chart to see details.</p>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">Phased Strategic Roadmap</h3>
+                    <p class="mb-6">A three-phase approach de-risks development and builds value incrementally, from a
+                        science-based MVP to a hyper-personalized market leader.</p>
+                    <div class="relative pl-8">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-item relative mb-8">
+                            <h4 class="font-bold text-lg">Phase 1: MVP</h4>
+                            <p class="text-gray-600">Launch a superior, scientifically-sound tracker to validate the
+                                core UX and build an initial user base.</p>
+                        </div>
+                        <div class="timeline-item relative mb-8">
+                            <h4 class="font-bold text-lg">Phase 2: AI-Enhanced</h4>
+                            <p class="text-gray-600">Introduce the adaptive engine: predictive support and personalized
+                                goals to measurably improve user outcomes.</p>
+                        </div>
+                        <div class="timeline-item relative">
+                            <h4 class="font-bold text-lg">Phase 3: Market Leader</h4>
+                            <p class="text-gray-600">Scale to a hyper-personalized platform with deep coaching and a
+                                privacy-first architecture (Federated Learning).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ethics & Trust Section -->
+        <section id="ethics" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2">Ethics & Trust</h2>
+            <p class="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">In wellness, trust is the product. A
+                commitment to ethical design, user autonomy, and data privacy is a non-negotiable foundation and a
+                powerful competitive advantage.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">Core Ethical Principles</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold">✅ Coaching, Not Coercion</h4>
+                            <p class="text-gray-600 text-sm">Technology must help users achieve their self-stated goals
+                                and enhance autonomy, never manipulate for corporate benefit.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">✅ Bias Mitigation</h4>
+                            <p class="text-gray-600 text-sm">Proactively audit algorithms and use diverse training data
+                                to ensure fair and effective outcomes for all users.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">✅ Privacy by Design</h4>
+                            <p class="text-gray-600 text-sm">Minimize data collection and provide users with
+                                transparent, absolute control over their information.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4">The Power of Federated Learning</h3>
+                    <p class="mb-4">This privacy-preserving technique inverts the traditional AI model. Raw user data
+                        never leaves the phone, building unparalleled trust.</p>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <h4 class="font-semibold text-red-800">Traditional AI</h4>
+                            <p class="text-sm text-red-700">User's sensitive data is sent to a central server, creating
+                                a high-risk target.</p>
+                        </div>
+                        <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <h4 class="font-semibold text-green-800">Federated Learning</h4>
+                            <p class="text-sm text-green-700">The AI model is sent to the device. Only anonymous updates
+                                are shared. <strong class="block">Your data stays on your phone.</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-24">
+        <div class="container mx-auto px-6 py-4 text-center text-sm">
+            <p>Interactive Blueprint generated from source report. For demonstration purposes only.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile Menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Nav Link Active State on Scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            // Habit Loop Interaction
+            const habitLoopNodes = {
+                cue: {
+                    title: 'Cue: The Trigger',
+                    text: 'The trigger that tells your brain to go into automatic mode and which habit to use. Can be a location, time, emotion, other people, or a preceding action.'
+                },
+                routine: {
+                    title: 'Routine: The Behavior',
+                    text: 'The physical, mental, or emotional action you take. This is the behavior you want to change or instill.'
+                },
+                reward: {
+                    title: 'Reward: The Payoff',
+                    text: 'The positive feedback that helps your brain figure out if this particular loop is worth remembering for the future. It solidifies the neural connection.'
+                }
+            };
+            const habitLoopInfo = document.getElementById('habit-loop-info');
+            document.querySelectorAll('.habit-loop-node').forEach(node => {
+                node.addEventListener('click', (e) => {
+                    document.querySelectorAll('.habit-loop-node').forEach(n => n.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    const key = e.currentTarget.id.split('-')[2];
+                    habitLoopInfo.innerHTML = `<h4 class="font-bold">${habitLoopNodes[key].title}</h4><p class="text-sm">${habitLoopNodes[key].text}</p>`;
+                });
+            });
+
+            // Fogg's Behavior Model (B=MAP) Interaction
+            const motivationSlider = document.getElementById('motivation-slider');
+            const abilitySlider = document.getElementById('ability-slider');
+            const bmapPoint = document.getElementById('bmap-point');
+            const bmapResult = document.getElementById('bmap-result');
+            const bmapLineCanvas = document.getElementById('bmap-line');
+            const ctxBmap = bmapLineCanvas.getContext('2d');
+
+            function drawBmapCurve() {
+                const w = bmapLineCanvas.clientWidth;
+                const h = bmapLineCanvas.clientHeight;
+                bmapLineCanvas.width = w;
+                bmapLineCanvas.height = h;
+                ctxBmap.clearRect(0, 0, w, h);
+                ctxBmap.beginPath();
+                ctxBmap.moveTo(0, h * 0.2);
+                ctxBmap.bezierCurveTo(w * 0.3, h * 0.3, w * 0.7, h * 0.7, w, h);
+                ctxBmap.strokeStyle = 'rgba(200, 200, 200, 0.8)';
+                ctxBmap.lineWidth = 3;
+                ctxBmap.stroke();
+            }
+
+            function updateBmap() {
+                const motivation = parseInt(motivationSlider.value);
+                const ability = parseInt(abilitySlider.value);
+                bmapPoint.style.bottom = `${motivation}%`;
+                bmapPoint.style.left = `${ability}%`;
+
+                // Simplified action line check
+                const threshold = 10000 - (ability * motivation);
+                if (threshold < 6500) {
+                    bmapResult.textContent = 'Action Succeeds!';
+                    bmapResult.className = 'mt-4 text-center font-bold text-lg p-2 rounded-lg bg-green-100 text-green-700';
+                    bmapPoint.style.backgroundColor = '#10B981';
+                } else {
+                    bmapResult.textContent = 'Action Fails';
+                    bmapResult.className = 'mt-4 text-center font-bold text-lg p-2 rounded-lg bg-red-100 text-red-700';
+                    bmapPoint.style.backgroundColor = '#EF4444';
+                }
+            }
+
+            drawBmapCurve();
+            motivationSlider.addEventListener('input', updateBmap);
+            abilitySlider.addEventListener('input', updateBmap);
+            window.addEventListener('resize', drawBmapCurve);
+
+
+            // Retention Chart
+            const retentionCtx = document.getElementById('retentionChart').getContext('2d');
+            new Chart(retentionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['App Popularity (Downloads)', 'Long-term Retention (30+ Days)'],
+                    datasets: [{
+                        label: 'Correlation with High UX Quality',
+                        data: [75, 15],
+                        backgroundColor: ['#4DB6AC', '#F28B82'],
+                        borderColor: ['#00796B', '#D9534F'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function (value) { return value + "%" }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'UX Quality vs. User Retention'
+                        }
+                    }
+                }
+            });
+
+            // Competitor Chart
+            const competitorCtx = document.getElementById('competitorChart').getContext('2d');
+            const competitorInfoEl = document.getElementById('competitor-info');
+            const competitorData = {
+                labels: ['Streaks', 'Habitica', 'Fabulous', 'Proposed AI App'],
+                datasets: [{
+                    label: 'Simplicity',
+                    data: [9, 3, 6, 8],
+                }, {
+                    label: 'Gamification',
+                    data: [4, 10, 5, 6],
+                }, {
+                    label: 'Science-Backed',
+                    data: [6, 4, 9, 10],
+                }, {
+                    label: 'Adaptability',
+                    data: [2, 1, 1, 10],
+                }]
+            };
+            const competitorDetails = {
+                'Streaks': { text: 'Focuses on minimalism, streaks, and deep iOS integration.', color: 'rgba(77, 182, 172, 0.7)' },
+                'Habitica': { text: 'Turns habits into a full-fledged Role-Playing Game (RPG).', color: 'rgba(242, 139, 130, 0.7)' },
+                'Fabulous': { text: 'A guided, journey-based self-care coach born out of Duke University.', color: 'rgba(255, 206, 86, 0.7)' },
+                'Proposed AI App': { text: 'A dynamic, adaptive system leveraging AI for hyper-personalization.', color: 'rgba(63, 81, 181, 0.7)' }
+            };
+
+            new Chart(competitorCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: competitorData.labels,
+                    datasets: [{
+                        data: [9, 10, 9, 10], // A representative score for each
+                        backgroundColor: Object.values(competitorDetails).map(d => d.color)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onHover: (event, chartElement) => {
+                        if (chartElement.length) {
+                            const index = chartElement[0].index;
+                            const label = competitorData.labels[index];
+                            competitorInfoEl.innerHTML = `<h4 class="font-bold" style="color:${competitorDetails[label].color.replace('0.7', '1')}">${label}</h4><p class="text-sm text-gray-600">${competitorDetails[label].text}</p>`;
+                        } else {
+                            competitorInfoEl.innerHTML = `<p class="text-gray-700">Hover over a segment in the chart to see details.</p>`;
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: 'Competitor Philosophies'
+                        }
+                    }
+                }
+            });
+
+            // Mockup Screen Interaction
+            const mockupScreen = document.getElementById('mockup-screen');
+            const mockupBtns = document.querySelectorAll('.mockup-btn');
+            const mockupContent = {
+                onboarding: `
+                    <div class="text-center flex-grow flex flex-col justify-center">
+                        <h4 class="font-bold text-lg">Welcome!</h4>
+                        <p class="text-gray-600 mt-2">What kind of person do you wish to become?</p>
+                        <input type="text" placeholder="e.g., A more mindful person" class="w-full mt-4 p-2 border rounded-md">
+                    </div>
+                    <p class="text-xs text-center text-gray-400">Identity-based onboarding</p>
+                `,
+                tracking: `
+                    <div class="flex-grow">
+                        <h4 class="font-bold text-lg mb-4">Today's Habits</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold">Read one page</p>
+                                    <p class="text-xs text-gray-500">🔥 12 day streak</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-full border-2 border-green-500 flex items-center justify-center text-green-500">✓</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white border rounded-lg">
+                                <p class="font-semibold">Meditate for 2 mins</p>
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-gray-400">Frictionless single-tap tracking</p>
+                `,
+                progress: `
+                     <div class="flex-grow">
+                        <h4 class="font-bold text-lg mb-4">Your Progress</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                           <div class="bg-[#4DB6AC] h-2.5 rounded-full" style="width: 75%"></div>
+                        </div>
+                        <p class="text-xs text-center mt-1 text-gray-500">Meditation: 75% consistency this month</p>
+                        <div class="mt-4 text-center">
+                            <span class="text-2xl">🏆</span>
+                            <p class="font-semibold">New Achievement!</p>
+                            <p class="text-sm text-gray-500">10-Day Streak</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-gray-400">Visual, satisfying feedback</p>
+                `,
+                social: `
+                    <div class="flex-grow">
+                        <h4 class="font-bold text-lg mb-4">Community</h4>
+                        <p class="text-sm mb-4">You and <strong>Alex</strong> are accountability partners for 'Morning Run'.</p>
+                        <div class="p-3 bg-blue-50 rounded-lg">
+                            <p class="text-sm"><strong class="text-blue-700">Alex:</strong> "Great job on the run today! You're inspiring me!"</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-gray-400">Optional social accountability</p>
+                `
+            };
+
+            function updateMockup(feature) {
+                mockupBtns.forEach(b => {
+                    b.classList.remove('bg-[#4DB6AC]', 'text-white');
+                    b.classList.add('bg-gray-200', 'text-gray-800');
+                });
+                const activeBtn = document.querySelector(`.mockup-btn[data-feature="${feature}"]`);
+                activeBtn.classList.add('bg-[#4DB6AC]', 'text-white');
+                activeBtn.classList.remove('bg-gray-200', 'text-gray-800');
+                mockupScreen.innerHTML = mockupContent[feature];
+            }
+
+            mockupBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    updateMockup(e.currentTarget.dataset.feature);
+                });
+            });
+            updateMockup('onboarding');
+
+        });
+    </script>
+</body>
+
+</html>
